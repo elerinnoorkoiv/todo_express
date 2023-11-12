@@ -13,7 +13,6 @@ const readFile = (filename) => {
 		fs.readFile(filename, 'utf8', (err, data) => {
 			if (err) {
 				console.error(err);
-				
 				return;
 			}
 			//tasks list data from file
@@ -112,6 +111,64 @@ app.get('/delete-tasks/', (req, res) => {
 		res.redirect('/')
 	})
 
+
+app.get('/update-task/:taskId', (req, res) => {
+	let taskId = parseInt(req.params.taskId)
+	readFile('./tasks.json')
+		.then(tasks => {
+			let taskText = "";
+			tasks.forEach((task, index) => {
+				if(task.id === taskId) {
+					taskText = task.task
+				}
+			})
+
+			res.render('updatetask', {
+				taskText: taskText, 
+				id: taskId,
+				error: null
+			})
+		})
+	})
+app.post('/update-task/', (req, res) => {
+	let taskId = parseInt(req.body.taskId)
+	// control data from form
+	let error = null
+	if(req.body.task.trim().length == 0){
+		error = 'Please insert correct task data'
+		readFile('./tasks.json')
+		.then(tasks => {
+			let taskText = "";
+			tasks.forEach((task, index) => {
+				if(task.id === taskId) {
+					taskText = task.task
+				}
+			})
+
+			res.render('updatetask', {
+				taskText: taskText, 
+				id: taskId,
+				error: error
+			})
+		})
+	} else {
+	// tasks list data from file
+	readFile('./tasks.json')
+		.then(tasks => {
+			tasks.forEach((task, index) => {
+				if(task.id == req.body.taskId) {
+					task.task = req.body.task;
+				}
+			})
+
+			data = JSON.stringify(tasks, null, 2)
+			writeFile('tasks.json', data)
+				// redirect to / to see result
+				res.redirect('/') 
+			})
+		}
+	})
+		
 app.listen(3001, () => {
 	console.log('Example app is started at http://localhost:3001')
 })
